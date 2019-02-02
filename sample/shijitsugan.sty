@@ -1,0 +1,13 @@
+%以下は国訳資治通鑑の書き起こし用の設定。
+
+%図を入れたいので。
+\usepackage{graphicx}
+
+%割注は、濃いめの水色の小さめの文字の括弧書きで、一行で示す。
+\newcommand{\warichu}[1]{{%
+  \textcolor[rgb]{0.0,0.5,0.8}{\footnotesize{（#1）}}%
+}}
+
+%年ごとに茶色っぽい色で見出しを入れる。
+\newcommand{\yearheading}[1]{{\subsection*{\textcolor[rgb]{0.5,0.2,0.0}{#1}}}}
+

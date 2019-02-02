@@ -1,0 +1,154 @@
+%XeLaTeX + 花園明朝 + 縦書き + ルビ
+\ProvidesPackage{xelatexhanaminvertical}[2019/02/02 v1.0]
+
+%XeLaTeX では、大まかには「文字を左に 90 度回転させた状態で横書きをして、
+%用紙全体を右に 90 度回転させる」という仕組みにより、擬似的に縦書きを実現
+%する。縦書き用クラスを指定するわけではない。よって、
+%\documentclass[a4paper,12pt]{article}
+%などとすること。
+
+%後で \setCJKfallbackfamilyfont を使うので [AutoFallBack] の指定を忘れずに。
+%[fallback] と指定してもよいみたい。
+\RequirePackage[AutoFallBack]{xeCJK}
+%色を使えるようにする。
+\RequirePackage{xcolor}
+
+%基本的には、脚注番号とページ番号でしか欧文フォントを使わないはず。
+%本文を明朝系にするので、区別しやすいフォントを指定してみた。
+\setmainfont[Vertical=RotatedGlyphs]{Menlo}
+%英単語などを例外的に横書きのまま (90度倒して) 縦組の中に混ぜたいことがある
+%ので、対処するためのコマンドを、ローマン体とタイプライタ体についてのみ、
+%試験的に定義してみた。フォントは好みで選んだもの。
+%なお、\raisebox を使っているのは、英字が右に寄りすぎてしまうのを補正するため。
+\newfontfamily\yokomukirm{Baskerville}
+\newfontfamily\yokomukitt{Ricty Discord}
+\newcommand{\yokorm}[1]{{\raisebox{-0.35ex}{ {\yokomukirm {#1}} }}}
+\newcommand{\yokott}[1]{{\raisebox{-0.35ex}{ {\yokomukitt {#1}} }}}
+
+%基本的には花園明朝Aを使う。
+%花園明朝には Vertical=RotatedGlyphs が効かないようなので 
+%RawFeature={vertical} のみを指定してみた。
+\setCJKmainfont[RawFeature={vertical}]{HanaMinA}
+%しかし、花園明朝だと句読点や鉤括弧が縦書き用のものにならない。
+%そこで、まずは花園明朝だと困る文字の集合を定義する (tategumimoji と名付けた)。
+%適宜、必要に応じて約物を足すこと。
+\xeCJKDeclareSubCJKBlock{tategumimoji}{
+  `、, `。, `・, `！, `？, `〜, `ー, `…, 
+  `〝, `〞, `‘, `’, `“, `”, 
+  `「, `」, `『, `』, `（, `）, 
+  `【, `】, `〖, `〗, `［, `］, 
+  `〈, `〉, `《, `》, `〘, `〙, `〔, `〕, `｛, `｝, 
+  `ぁ, `ぃ, `ぅ, `ぇ, `ぉ, `っ, `ゃ, `ゅ, `ょ,
+  `ァ, `ィ, `ゥ, `ェ, `ォ, `ッ, `ャ, `ュ, `ョ,
+   `；, `：
+}
+%この tategumimoji という集合に含まれる文字には別のフォント (游明朝体) を使う。
+%ただしこれは弥縫策。
+%vhal は好みで + と - のどちらにしてもよい (+ にすると句読点等の約物の高さが
+%半角相当になるが、- にすると全角相当のまま)。
+\setCJKmainfont[tategumimoji,Vertical=RotatedGlyphs,RawFeature={vertical:-vhal}]{YuMin-Medium}
+%花園明朝Aで定義されていない文字に対しては花園明朝Bを使う。
+\setCJKfallbackfamilyfont{rm}[RawFeature={vertical}]{HanaMinB}
+
+%日本語の禁則処理用。よく分かっていないのでおまじない的に。
+%cf. https://texwiki.texjp.org/?XeTeX#yeeccfb4
+%    http://zrbabbler.sp.land.to/xelatex.html
+\XeTeXlinebreaklocale "ja"
+\XeTeXlinebreakskip=0em plus 0.1em minus 0.01em
+\XeTeXlinebreakpenalty=0
+\def\<{\@ifstar{\zx@hwback\nobreak}{\zx@hwback\relax}}
+\def\zx@hwback#1{\leavevmode#1\hskip-.5em\relax}
+
+%縦書きにするために必要 (用紙全体を回転させる)。
+\RequirePackage{atbegshi}
+\AtBeginShipout{%
+  \global\setbox\AtBeginShipoutBox\vbox{%
+    \special{pdf: put @thispage <</Rotate 90>>}%
+    \box\AtBeginShipoutBox
+  }%
+}%
+
+%ルビ
+\RequirePackage{pxrubrica}
+%デフォルトを「モノルビで、隣の文字へのルビの進入 (はみ出し) なし」とする。
+\rubysetup{|m|}
+%よって、グループルビにしたいところでは \ruby[g]{所以}{ゆゑん} のように 
+%[g] を指定すること。
+%
+%ルビ注 (短い注を左側ルビとして入れる)。
+%\rubyの引数を一重ではなく二重のブレースで囲ってあるのは、一見不要そうに
+%見えるが、こうしておかないとこのコマンドを呼び出したところでエラーが出るため。
+\newcommand{\rubychu}[2]{{%
+  \rubyintergap{0.2}%
+  \ruby[||gS*>]{{\rubyintergap{0}{#1}}}{{\textcolor[rgb]{1.0,0.25,0.0}{#2}}}%
+}}
+
+%最初の段落も強制的にインデントする。
+\RequirePackage{indentfirst}
+%インデント量を明示的に指定する (何も指定しないと、一字分より大きなインデント
+%になるようだったので)。
+\setlength{\parindent}{1em}
+
+\RequirePackage{setspace}
+%総ルビでごちゃごちゃするので、行間を広めにとる。
+\linespread{2}
+%段落間を少し空ける。
+\setlength{\parskip}{2.5ex}
+%ルビなしで普通に行間を詰めて書きたい箇所用の環境を定義してみた。
+%ルビありで行間を詰めたい箇所では \begin{spacing}{1.4} ... \end{spacing} を
+%使うと良い。
+\newenvironment{squeezedlines}{\setstretch{1.2}\setlength{\parskip}{0.6ex}}{}
+%行間を広めにとるのは本文だけにしておきたいので、脚注の中での行間を別途設定する。
+%脚注にルビを振らないなら、
+%\setlength{\footnotesep}{12pt}
+%と設定するだけでも良いのだが、ルビを振りたい場合は、ルビが前の行にかからない
+%ように微調整する。
+\RequirePackage{footmisc}
+\renewcommand{\footnotelayout}{\baselineskip 1.5\baselineskip \footnotesep 1.8\footnotesep}
+%複数行にわたる脚注がページをまたがないようにする。
+\interfootnotelinepenalty=10000
+
+%脚注番号をページごとにリセットする
+%(footmisc パッケージの perpage オプションでも良さそうだがうまくいかなかった)。
+%脚注番号のスタイルにもよるが、数字を使っていて番号が二桁以上になると、数字が
+%縦に並ぶことになり、スペース調整が難しくなる。
+%脚注番号をページごとにリセットすれば、大抵のページでは番号が一桁で収まるので
+%見栄えの問題があまりない。
+\RequirePackage{perpage}
+\MakePerPage{footnote}
+
+%データ起こしの場合、原注と自分用のメモの双方を脚注に入れたいが、両者を区別
+%できるようにしておきたい。色で区別するとともに、アクセシビリティの観点から
+%色以外の手段でも区別できるようにしておく。
+%原注は「#1」のような形式でマゼンタっぽい色で示す。
+\renewcommand{\thefootnote}{%
+  \textcolor[rgb]{1.0,0.1,0.6}{%
+    \hspace{-1ex}\#\hspace{-1ex}\arabic{footnote}\hspace{1.5ex}
+  }%
+}
+%自分用のメモは「*2」のような形式でペパーミントグリーンで示す。
+%でもアクセシビリティの面から考えると、ちょっと色が明るすぎるかも。
+\newcommand{\extrafootnote}[1]{{%
+  \renewcommand{\thefootnote}{%
+    \textcolor[rgb]{0.1,0.8,0.65}{%
+       \hspace{-1ex}*\hspace{-1ex}\arabic{footnote}\hspace{1.5ex}
+    }%
+  }%
+  \footnote{#1}%
+}}
+%本文と脚注の区切り線を本文からもう少し離したいので、以下のようにしてみた。
+\addtolength{\skip\footins}{1em}
+
+%quote環境だと引用の左右が空き過ぎるので、適当に縮める。
+\RequirePackage{quoting}
+\quotingsetup{vskip=-1.5ex}
+
+%ハイパーリンク。四角で囲うデフォルトのスタイルをやめる。
+%外部へのリンクを青字にする。
+\RequirePackage{hyperref}
+\hypersetup{
+  colorlinks=true, 
+  pdfborderstyle=/S/U, 
+  linkcolor=[rgb]{0.2 0.6 0.0},
+  urlcolor=blue
+}
