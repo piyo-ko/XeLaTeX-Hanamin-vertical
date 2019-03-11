@@ -2,7 +2,7 @@ FILE=vol_082
 
 all: $(FILE).pdf
 
-$(FILE).pdf: $(FILE).tex
+$(FILE).pdf: $(FILE).tex ../xelatexhanaminvertical.sty
 	xelatex $< && xelatex $<
 
 .PHONY: clean
