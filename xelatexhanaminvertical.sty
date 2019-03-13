@@ -1,5 +1,5 @@
 %XeLaTeX + 花園明朝 + 縦書き + ルビ
-\ProvidesPackage{xelatexhanaminvertical}[2019/02/02 v1.0]
+\ProvidesPackage{xelatexhanaminvertical}[2019/03/13 v2.0]
 
 %XeLaTeX では、大まかには「文字を左に 90 度回転させた状態で横書きをして、
 %用紙全体を右に 90 度回転させる」という仕組みにより、擬似的に縦書きを実現
@@ -12,6 +12,15 @@
 \RequirePackage[AutoFallBack]{xeCJK}
 %色を使えるようにする。
 \RequirePackage{xcolor}
+
+%日本語の禁則処理用。よく分かっていないのでおまじない的に。
+%cf. https://texwiki.texjp.org/?XeTeX#yeeccfb4
+%    http://zrbabbler.sp.land.to/xelatex.html
+\XeTeXlinebreaklocale "ja"
+\XeTeXlinebreakskip=0em plus 1em minus 0.01em\relax
+\XeTeXlinebreakpenalty=0
+\def\<{\@ifstar{\zx@hwback\nobreak}{\zx@hwback\relax}}
+\def\zx@hwback#1{\leavevmode#1\hskip-.5em\relax}
 
 %基本的には、脚注番号とページ番号でしか欧文フォントを使わないはず。
 %本文を明朝系にするので、区別しやすいフォントを指定してみた。
@@ -29,35 +38,24 @@
 %花園明朝には Vertical=RotatedGlyphs が効かないようなので 
 %RawFeature={vertical} のみを指定してみた。
 \setCJKmainfont[RawFeature={vertical}]{HanaMinA}
-%しかし、花園明朝だと句読点や鉤括弧が縦書き用のものにならない。
-%そこで、まずは花園明朝だと困る文字の集合を定義する (tategumimoji と名付けた)。
-%適宜、必要に応じて約物を足すこと。
-\xeCJKDeclareSubCJKBlock{tategumimoji}{
-  `、, `。, `・, `！, `？, `〜, `ー, `…, 
-  `〝, `〞, `‘, `’, `“, `”, 
-  `「, `」, `『, `』, `（, `）, 
-  `【, `】, `〖, `〗, `［, `］, 
-  `〈, `〉, `《, `》, `〘, `〙, `〔, `〕, `｛, `｝, 
+%しかし、花園明朝だと句読点や鉤括弧が縦書き用のものにならず、
+%小書き仮名が行末禁則の対象とならない、といった難点があるので、それに対処する。
+\xeCJKDeclareCharClass{FullRight}{
+  `〻, `々, `〜, `ー, `…, 
   `ぁ, `ぃ, `ぅ, `ぇ, `ぉ, `っ, `ゃ, `ゅ, `ょ,
-  `ァ, `ィ, `ゥ, `ェ, `ォ, `ッ, `ャ, `ュ, `ョ,
-   `；, `：
+  `ァ, `ィ, `ゥ, `ェ, `ォ, `ッ, `ャ, `ュ, `ョ
 }
-%この tategumimoji という集合に含まれる文字には別のフォント (游明朝体) を使う。
-%ただしこれは弥縫策。
-%vhal は好みで + と - のどちらにしてもよい (+ にすると句読点等の約物の高さが
-%半角相当になるが、- にすると全角相当のまま)。
-\setCJKmainfont[tategumimoji,Vertical=RotatedGlyphs,RawFeature={vertical:-vhal}]{YuMin-Medium}
+\newCJKfontfamily [yakumonofont] \yakumono{YuMin-Medium}[Vertical=RotatedGlyphs,RawFeature={vertical:-vhal}]
+\xeCJKDeclarePunctStyle{yakumonosty} {
+  enabled-hanging = true
+}
+\xeCJKsetup{
+  PunctFamily = yakumonofont, 
+  PunctStyle = yakumonosty,
+}
+
 %花園明朝Aで定義されていない文字に対しては花園明朝Bを使う。
 \setCJKfallbackfamilyfont{rm}[RawFeature={vertical}]{HanaMinB}
-
-%日本語の禁則処理用。よく分かっていないのでおまじない的に。
-%cf. https://texwiki.texjp.org/?XeTeX#yeeccfb4
-%    http://zrbabbler.sp.land.to/xelatex.html
-\XeTeXlinebreaklocale "ja"
-\XeTeXlinebreakskip=0em plus 0.1em minus 0.01em
-\XeTeXlinebreakpenalty=0
-\def\<{\@ifstar{\zx@hwback\nobreak}{\zx@hwback\relax}}
-\def\zx@hwback#1{\leavevmode#1\hskip-.5em\relax}
 
 %縦書きにするために必要 (用紙全体を回転させる)。
 \RequirePackage{atbegshi}
@@ -75,12 +73,23 @@
 %よって、グループルビにしたいところでは \ruby[g]{所以}{ゆゑん} のように 
 %[g] を指定すること。
 %
+%脚注番号の前で改行されるのを防ぐ (禁則処理が正しく行われるようにする) ため
+%和文ゴースト処理を有効にする。
+\rubyusejghost
+%
 %ルビ注 (短い注を左側ルビとして入れる)。
 %\rubyの引数を一重ではなく二重のブレースで囲ってあるのは、一見不要そうに
 %見えるが、こうしておかないとこのコマンドを呼び出したところでエラーが出るため。
+%また、和文ゴースト処理を有効にしていると
+%「! Package pxrubrica Error: Intrusion disallowed when ghost is enabled.」
+%とエラーが出るので、一旦無効にする。
+%使用例:
+%\rubychu{\ruby{弭息}{び|そく}}{ヤメトドム}すべし。
 \newcommand{\rubychu}[2]{{%
+  \rubynousejghost
   \rubyintergap{0.2}%
-  \ruby[||gS*>]{{\rubyintergap{0}{#1}}}{{\textcolor[rgb]{1.0,0.25,0.0}{#2}}}%
+  \ruby[||gS*>]{{\rubyintergap{0}\rubyusejghost{#1}}}{{\textcolor[rgb]{1.0,0.25,0.0}{#2}}}%
+  \rubyusejghost
 }}
 
 %最初の段落も強制的にインデントする。
@@ -136,6 +145,7 @@
   }%
   \footnote{#1}%
 }}
+
 %本文と脚注の区切り線を本文からもう少し離したいので、以下のようにしてみた。
 \addtolength{\skip\footins}{1em}
 
