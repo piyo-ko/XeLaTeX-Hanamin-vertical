@@ -14,6 +14,6 @@ If you have any comments, please do not hesitate to contact me [on Twitter](http
 * ルビを振りたい → XeLaTeX でできた。
 * 総ルビにすると禁則処理がうまくできない箇所が生じてしまった → 和文ゴーストを使用すれば解決。
 
-試行錯誤の詳しい過程 (禁則処理がうまくできない箇所が残っている段階まで) は、[別のページ](https://piyo-ko.github.io/comp/XeLaTeX-vertical-typesetting.html)に書きました。続きもいずれ書く予定です。
+試行錯誤の詳しい過程 (禁則処理がうまくできない箇所が残っている段階まで) は、[別のページ](https://piyo-ko.github.io/comp/XeLaTeX-vertical-typesetting.html)に書きました。[その続き](https://piyo-ko.github.io/comp/XeLaTeX-vertical-typesetting-2.html) (禁則処理もうまくいったよ、という話) も書きましたので、よかったらお読みください。
 
 コメントなどは [Twitter](https://twitter.com/pi__yo__ko) でお気軽に。
